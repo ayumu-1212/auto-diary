@@ -1,7 +1,23 @@
 import { useState } from "react"
 
 function IndexPopup() {
-  const [data, setData] = useState("")
+  const [historyItems, setHistoryItems] = useState<chrome.history.HistoryItem[]>([])
+
+  const getHistory = async() => {
+    const now = new Date()
+
+    const text = ""
+    const startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0).getTime()
+    const endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).getTime()
+    const maxResults = 10
+    const items = await chrome.history.search({
+      text,
+      startTime,
+      endTime,
+      maxResults,
+    })
+    setHistoryItems(items)
+  }
 
   return (
     <div
@@ -18,10 +34,12 @@ function IndexPopup() {
         </a>{" "}
         Extension!
       </h2>
-      <input onChange={(e) => setData(e.target.value)} value={data} />
-      <a href="https://docs.plasmo.com" target="_blank">
-        View Docs
-      </a>
+      <button id="getHistory" onClick={getHistory}>getHistory</button>
+      <div>
+        <ul>
+          {historyItems.map((item) => (<li id={item.id} key={item.id}>{item.title}</li>))}
+        </ul>
+      </div>
     </div>
   )
 }
