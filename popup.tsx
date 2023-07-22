@@ -1,8 +1,14 @@
 import { useState } from "react"
+import { getCommits } from "~apis/getCommits"
+import { getRepos } from "~apis/getRepos"
+import type { Repo } from "~apis/getRepos"
+
+import { Flex, Heading, Spacer, Grid, GridItem } from '@chakra-ui/react'
 
 function IndexPopup() {
   const [historyItems, setHistoryItems] = useState<chrome.history.HistoryItem[]>([])
   const [commitItems, setCommitItems] = useState([])
+  const [repoItems, setRepoItems] = useState<Repo[]>([])
 
   const getHistory = async() => {
     const now = new Date()
@@ -20,46 +26,22 @@ function IndexPopup() {
     setHistoryItems(items)
   }
 
-  const getCommits = async() => {
-    // すぐ消す
-    const token="token"
+  const onRepos = async() => {
+    const repos = await getRepos()
+    setRepoItems(repos)
+  }
 
-    const maxResults = 5
-    const items = []
-
-    await fetch(`https://api.github.com/repos/ayumu-1212/dnn_of_crystal_grain_diameter_distributional/commits?per_page=${maxResults}`, {
-      headers: {
-        Authorization: `token ${token}`
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      data.forEach(d => {
-        items.push(d.commit.message)
-      })
-    })
-    .catch(error => console.error(error))
-
-    setCommitItems(items)
+  const onCommits = async() => {
+    const commits = await getCommits({owner: 'ayumu-1212', repo: 'dnn_of_crystal_grain_diameter_distributional'})
+    setCommitItems(commits)
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        padding: 16
-      }}>
-      <h2>
-        Welcome to your
-        <a href="https://www.plasmo.com" target="_blank">
-          {" "}
-          Plasmo
-        </a>{" "}
-        Extension!
-      </h2>
+    <Flex direction="column" p='1rem' w='30rem'>
+      <Heading as="h2" size="md">DayBack</Heading>
       <button id="getHistory" onClick={getHistory}>getHistory</button>
-      <button id="getCommits" onClick={getCommits}>getCommits</button>
+      <button id="getCommits" onClick={onCommits}>getCommits</button>
+      <button id="getRepos" onClick={onRepos}>getRepos</button>
       <div>
         <ul>
           {historyItems.map((item) => (<li id={item.id} key={item.id}>{item.title}</li>))}
@@ -67,10 +49,15 @@ function IndexPopup() {
       </div>
       <div>
         <ul>
-          {commitItems.map((item) => (<li id={item.id} key={item.id}>{item}</li>))}
+          {commitItems.map((item, index) => (<li id={`commit-${index}-id`} key={`commit-${index}-key`}>{item}</li>))}
         </ul>
       </div>
-    </div>
+      <div>
+        <ul>
+          {repoItems.map((item, index) => (<li id={`repo-${index}-id`} key={`repo-${index}-key`}>{item.name}, {item.updated_at.toISOString()}</li>))}
+        </ul>
+      </div>
+    </Flex>
   )
 }
 
