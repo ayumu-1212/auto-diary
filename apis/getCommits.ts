@@ -5,7 +5,7 @@ type Props = {
 }
 
 export type Commit = {
-  commiter: string
+  committer: string
   message: string
   date: Date
 }
@@ -26,9 +26,9 @@ export const getCommits = async({owner, repo, since}: Props) => {
   .then(data => {
     data.forEach(d => {
       items.push({
-        commiter: d.commiter.login,
+        committer: d.committer.login,
         message: d.commit.message,
-        date: d.commit.commiter.date
+        date: new Date(d.commit.committer.date)
       })
     })
   })
