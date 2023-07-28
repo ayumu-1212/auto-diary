@@ -15,7 +15,6 @@ type Props = {
 
 export const getCommitDays = ({commits, latestDays, commitDays, maxDays}: Props) => {
   for (let commit of commits) {
-    console.log(commit)
     const targetDate = commit.date
 
     // 朝の9時までは前日です
@@ -35,7 +34,6 @@ export const getCommitDays = ({commits, latestDays, commitDays, maxDays}: Props)
           commits: [commit]
         }
       )
-      console.log(1)
       continue
     }
 
