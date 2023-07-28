@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import styled from "@emotion/styled"
 import { useStorage } from "@plasmohq/storage/hook"
 import { Storage } from "@plasmohq/storage"
@@ -9,6 +9,9 @@ import ReplayIcon from '@mui/icons-material/Replay';
 
 import { getDiaries } from "~hooks/getDiaries"
 import type { CommitDay } from "~hooks/getCommitDays"
+
+import { postPrompt } from "~apis/postPrompt"
+import { getHistory } from "~apis/getHistory"
 
 type HistoryDay = {
   date: Date
@@ -54,21 +57,16 @@ function IndexPopup() {
 
   useEffect(() => {
     const fetchSearchData = async() => {
-      const text = ""
-      const maxResults = 10
       const historyItems: HistoryDay[] = []
       for (const date of diaries.map((diary) => (new Date(diary.date)))) {
         const historyDay : HistoryDay = {
           date: date,
           items: []
         }
-        const startTime = date.getTime()
-        const endTime = date.setHours(23)
-        const history = await chrome.history.search({
-          text,
-          startTime,
+        const endTime = new Date(date.setHours(23))
+        const history = await getHistory({
+          startTime: date,
           endTime,
-          maxResults,
         })
         historyDay.items = history
         historyItems.push(historyDay)
@@ -79,7 +77,6 @@ function IndexPopup() {
   }, [diaries])
 
   useEffect(() => {
-    const AI_TOKEN = process.env.PLASMO_PUBLIC_OPEN_AI_TOKEN
     const headers = []
     const onPostAi = async() => {
       for (const index of [0, 1, 2, 3, 4]) {
@@ -89,26 +86,8 @@ function IndexPopup() {
           Googleの検索履歴\n
           ${historyItems.length > index ? historyItems[index].items.map((item) => (`- ${item}\n`)) : ''}
         `
-        const requestBody = {
-          model: "text-davinci-003",
-          prompt: prompt,
-          temperature: 1,
-          max_tokens: 2048,
-        }
-        await fetch('https://api.openai.com/v1/completions', {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${AI_TOKEN}`
-          },
-          body: JSON.stringify(requestBody)
-        })
-        .then(response => response.json())
-        .then(data => {
-          console.log(data.choices[0].text.trim())
-          headers.push(data.choices[0].text.trim())
-        })
-        .catch(error => console.error(error))
+        const header = await postPrompt({prompt})
+        headers.push(header)
       }
       setHeaders(headers)
     }
