@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react"
 import styled from "@emotion/styled"
+import { useStorage } from "@plasmohq/storage/hook"
+import { Storage } from "@plasmohq/storage"
 
-import { Accordion, AccordionDetails, AccordionSummary, Typography, Grid } from '@mui/material'
+import { Accordion, AccordionDetails, AccordionSummary, Typography, Grid, IconButton, Box } from '@mui/material'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ReplayIcon from '@mui/icons-material/Replay';
 
 import { getDiaries } from "~hooks/getDiaries"
 import type { CommitDay } from "~hooks/getCommitDays"
@@ -12,27 +16,48 @@ type HistoryDay = {
 }
 
 function IndexPopup() {
-  const [historyItems, setHistoryItems] = useState<HistoryDay[]>([])
+  const [updateTimes, setUpdateTimes] = useStorage<number>({
+    key: "updateTimes",
+    instance: new Storage({
+      area: "local"
+    })
+  }, 0)
 
-  const [diaries, setDiaries] = useState<CommitDay[]>([])
+  const [historyItems, setHistoryItems] = useStorage<HistoryDay[]>({
+    key: "historyItems",
+    instance: new Storage({
+      area: "local"
+    })
+  }, [])
 
-  const [headers, setHeaders] = useState<String[]>([])
+  const [diaries, setDiaries] = useStorage<CommitDay[]>({
+    key: "diaries",
+    instance: new Storage({
+      area: "local"
+    })
+  }, [])
+
+  const [headers, setHeaders] = useStorage<String[]>({
+    key: "headers",
+    instance: new Storage({
+      area: "local"
+    })
+  }, [])
 
   useEffect(() => {
     const fetchCommitData = async() => {
       const data = await getDiaries()
       await setDiaries(data)
-      // await fetchSearchData()
     }
     fetchCommitData()
-  }, [])
+  }, [updateTimes])
 
   useEffect(() => {
     const fetchSearchData = async() => {
       const text = ""
       const maxResults = 10
       const historyItems: HistoryDay[] = []
-      for (const date of diaries.map((diary) => (diary.date))) {
+      for (const date of diaries.map((diary) => (new Date(diary.date)))) {
         const historyDay : HistoryDay = {
           date: date,
           items: []
@@ -91,7 +116,6 @@ function IndexPopup() {
   }, [historyItems])
 
   const formatDate = (date: Date) => {
-    // const year = date.getFullYear()
     const month = date.getMonth() + 1
     const day = date.getDate()
     const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()]
@@ -101,13 +125,26 @@ function IndexPopup() {
 
   return (
     <ContainerStyle>
-      <TitleStyle>DayBack</TitleStyle><SubTitleStyle>~わい前回何やったっけ？~</SubTitleStyle>
+      <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
+        <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'flex-start'}}>
+          <TitleStyle>DayBack</TitleStyle>
+          <SubTitleStyle>~わい前回何やったっけ？~</SubTitleStyle>
+        </Box>
+        <IconButton onClick={() => setUpdateTimes(updateTimes + 1)}>
+          <ReplayIcon />
+        </IconButton>
+      </Box>
       {diaries.map((diary, index) => (
         <Accordion>
-          <AccordionSummary aria-controls="panel1a-content" id="panel1a-header">
-            <Typography>
-              {formatDate(diary.date)}<br />{headers.length > index ? headers[index] : ''}
-            </Typography>
+          <AccordionSummary aria-controls="panel1a-content" id="panel1a-header" expandIcon={<ExpandMoreIcon />}>
+            <Box sx={{display: 'flex', flexDirection: 'column'}}>
+              <Typography>
+                {formatDate(new Date(diary.date))}
+              </Typography>
+              <Typography>
+                {headers.length > index ? headers[index] : ''}
+              </Typography>
+            </Box>
           </AccordionSummary>
           <AccordionDetails>
             <Grid container spacing={2}>
