@@ -1,4 +1,4 @@
-import type { Commit } from "~apis/getCommits"
+import type { Commit } from "~apis"
 
 export type CommitDay = {
   date: Date

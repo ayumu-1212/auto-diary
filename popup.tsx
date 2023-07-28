@@ -7,11 +7,10 @@ import { Accordion, AccordionDetails, AccordionSummary, Typography, Grid, IconBu
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ReplayIcon from '@mui/icons-material/Replay';
 
-import { getDiaries } from "~hooks/getDiaries"
-import type { CommitDay } from "~hooks/getCommitDays"
+import { getDiaries } from "~hooks"
+import type { CommitDay } from "~hooks"
 
-import { postPrompt } from "~apis/postPrompt"
-import { getHistory } from "~apis/getHistory"
+import { postPrompt, getHistory } from "~apis"
 
 type HistoryDay = {
   date: Date
